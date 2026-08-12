@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Section {
+  QUANT
+  VERBAL
+  DATA_INSIGHTS
+}
+
+enum QuestionType {
+  PROBLEM_SOLVING
+  CRITICAL_REASONING
+  READING_COMPREHENSION
+  DATA_SUFFICIENCY
+  MULTI_SOURCE_REASONING
+  TABLE_ANALYSIS
+  GRAPHICS_INTERPRETATION
+  TWO_PART_ANALYSIS
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum AnswerChoice {
+  A
+  B
+  C
+  D
+  E
+}
+
+enum PracticeMode {
+  PRACTICE
+  REVIEW
+}
+
+model Question {
+  id            Int          @id @default(autoincrement())
+  section       Section
+  type          QuestionType
+  concept       String
+  difficulty    Difficulty
+  text          String
+  choiceA       String
+  choiceB       String
+  choiceC       String
+  choiceD       String
+  choiceE       String
+  correctAnswer AnswerChoice
+  explanation   String
+  source        String       @default("self-made")
+  notes         String?
+  targetSeconds Int          @default(120)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  attempts      Attempt[]
+  reviewPlan    ReviewPlan?
+}
+
+model Attempt {
+  id             Int          @id @default(autoincrement())
+  questionId     Int
+  question       Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  mode           PracticeMode @default(PRACTICE)
+  selectedAnswer AnswerChoice
+  isCorrect      Boolean
+  timeSeconds    Int
+  confidence     Int
+  mistakeTags    String       @default("[]")
+  createdAt      DateTime     @default(now())
+}
+
+model ReviewPlan {
+  id                       Int       @id @default(autoincrement())
+  questionId               Int       @unique
+  question                 Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  stageIndex               Int       @default(0)
+  nextReviewAt             DateTime
+  correctUnderTargetStreak Int       @default(0)
+  mastered                 Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+}
+
+model MockTest {
+  id                     Int      @id @default(autoincrement())
+  date                   DateTime
+  totalScore             Int
+  quantScore             Int?
+  quantPercentile        Int?
+  verbalScore            Int?
+  verbalPercentile       Int?
+  dataInsightsScore      Int?
+  dataInsightsPercentile Int?
+  notes                  String?
+  wentWrong              String?
+  drillNext              String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
